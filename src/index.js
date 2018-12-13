@@ -15,7 +15,9 @@ const { get, has, find } = require("lodash");
  * @return {Array}  Sorted list of non-cyclic paths into obj
  */
 export const getSortedObjectPaths = (obj) => {
-  if (!obj) { return []; }
+  if (!obj) {
+    return [];
+  }
 
   return traverse(obj)
     .paths()
@@ -32,7 +34,9 @@ export const getSortedObjectPaths = (obj) => {
  * @return {Object}  replacement object
  */
 const getReplacements = (configOptions) => {
-  if (typeof configOptions === "object") { return configOptions; }
+  if (typeof configOptions === "object") {
+    return configOptions;
+  }
 
   try {
     const fullPath = path.join(process.cwd(), configOptions);
@@ -74,35 +78,54 @@ const replaceAndEvaluateNode = (replaceFn, nodePath, replacement) => {
  * @param  {function}   comparator   The function used to evaluate whether a node matches a value in `replacements`
  * @return {undefined}
  */
-const processNode = (replacements, nodePath, replaceFn, comparator) => { // eslint-disable-line
-  const replacementKey = find(getSortedObjectPaths(replacements),
-    (value) => comparator(nodePath, value));
+const processNode = (replacements, nodePath, replaceFn, comparator) => {
+  // eslint-disable-line
+  const replacementKey = find(getSortedObjectPaths(replacements), (value) =>
+    comparator(nodePath, value)
+  );
   if (has(replacements, replacementKey)) {
-    replaceAndEvaluateNode(replaceFn, nodePath, get(replacements, replacementKey));
+    replaceAndEvaluateNode(
+      replaceFn,
+      nodePath,
+      get(replacements, replacementKey)
+    );
   }
 };
 
-const memberExpressionComparator = (nodePath, value) => nodePath.matchesPattern(value);
+const memberExpressionComparator = (nodePath, value) =>
+  nodePath.matchesPattern(value);
 const identifierComparator = (nodePath, value) => nodePath.node.name === value;
-const unaryExpressionComparator = (nodePath, value) => nodePath.node.argument.name === value;
+const unaryExpressionComparator = (nodePath, value) =>
+  nodePath.node.argument.name === value;
 
 export default function ({ types: t }) {
   return {
     visitor: {
-
       // process.env.NODE_ENV;
       MemberExpression(nodePath, state) {
-        processNode(getReplacements(state.opts), nodePath, t.valueToNode, memberExpressionComparator);
+        processNode(
+          getReplacements(state.opts),
+          nodePath,
+          t.valueToNode,
+          memberExpressionComparator
+        );
       },
 
       // const x = { version: VERSION };
       Identifier(nodePath, state) {
-        processNode(getReplacements(state.opts), nodePath, t.valueToNode, identifierComparator);
+        processNode(
+          getReplacements(state.opts),
+          nodePath,
+          t.valueToNode,
+          identifierComparator
+        );
       },
 
       // typeof window
       UnaryExpression(nodePath, state) {
-        if (nodePath.node.operator !== "typeof") { return; }
+        if (nodePath.node.operator !== "typeof") {
+          return;
+        }
 
         const replacements = getReplacements(state.opts);
         const keys = Object.keys(replacements);
@@ -114,9 +137,13 @@ export default function ({ types: t }) {
           }
         });
 
-        processNode(typeofValues, nodePath, t.valueToNode, unaryExpressionComparator);
+        processNode(
+          typeofValues,
+          nodePath,
+          t.valueToNode,
+          unaryExpressionComparator
+        );
       }
-
     }
   };
 }
