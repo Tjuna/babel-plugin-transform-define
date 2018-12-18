@@ -138,7 +138,9 @@ describe("babel-plugin-transform-define", () => {
     });
 
     it("should transform code from config in a file", () => {
-      const babelOpts = getBabelOps("./test/load-config-file/config.js");
+      const babelOpts = getBabelOps({
+        file: "./test/load-config-file/config.js"
+      });
 
       return assertTransform(
         path.join(__dirname, "./load-config-file/actual.js"),
